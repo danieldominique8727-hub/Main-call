@@ -1,20 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <title>AI Replica Cam</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Load MediaPipe AI Tools -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 </head>
 <body>
-    <div class="controls">
+    <div class="header-ui">
         <input type="file" id="imageUpload" accept="image/*">
-        <input type="text" id="filterText" placeholder="Type words here...">
+        <button onclick="location.reload()">Reset Cam</button>
     </div>
-    
-    <div class="video-container">
-        <video id="input_video" hidden></video>
-        <canvas id="output_canvas"></canvas>
+
+    <div class="main-container">
+        <div class="cam-box">
+            <span>DRIVER (REAL ME)</span>
+            <video id="input_video"></video>
+        </div>
+
+        <div class="cam-box">
+            <span>AI REPLICA (LIP SYNC)</span>
+            <canvas id="output_canvas"></canvas>
+        </div>
     </div>
 
     <script src="script.js"></script>
