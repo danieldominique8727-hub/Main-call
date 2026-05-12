@@ -1,15 +1,32 @@
-function animateMouth(results, userImg) {
-    // MediaPipe points for lips
-    const topLip = results.faceLandmarks[13];
-    const bottomLip = results.faceLandmarks[14];
-    
-    // Calculate how wide the mouth is open
-    const openDist = Math.abs(topLip.y - bottomLip.y);
+// This version uses a simpler camera call that Safari prefers
+const video = document.getElementById('input_video');
+const canvas = document.getElementById('output_canvas');
+const ctx = canvas.getContext('2d');
 
-    // DRAWING LOGIC:
-    // 1. Draw the top half of the photo
-    canvasCtx.drawImage(userImg, 0, 0, imgW, imgH/2, x, y, w, h/2);
-    
-    // 2. Draw the bottom half, but shift it down based on 'openDist'
-    canvasCtx.drawImage(userImg, 0, imgH/2, imgW, imgH/2, x, y + (h/2) + (openDist * 500), w, h/2);
+async function startCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+        video.play();
+        draw();
+    } catch (err) {
+        alert("Camera blocked! Go to AA menu > Website Settings > Allow Camera");
+    }
 }
+
+function draw() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // Draw the webcam feed
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    // Logic for the 'Words' to follow movement
+    ctx.fillStyle = "yellow";
+    ctx.font = "bold 24px Arial";
+    ctx.fillText("AI TRACKING ACTIVE", 50, 50);
+
+    requestAnimationFrame(draw);
+}
+
+startCamera();
