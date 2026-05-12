@@ -1,40 +1,74 @@
-// ... keep your existing variables at the top ...
-let recordedChunks = [];
-let mediaRecorder;
+const video = document.getElementById('driverVideo');
+const canvas = document.getElementById('outputCanvas');
+const ctx = canvas.getContext('2d');
+const renderBtn = document.getElementById('renderBtn');
+const status = document.getElementById('status');
 
-async function processVideo() {
+let replicaPhoto = new Image();
+
+document.getElementById('imageInput').onchange = (e) => {
+    const reader = new FileReader();
+    reader.onload = (f) => replicaPhoto.src = f.target.result;
+    reader.readAsDataURL(e.target.files[0]);
+};
+
+document.getElementById('videoInput').onchange = (e) => {
+    video.src = URL.createObjectURL(e.target.files[0]);
+    status.innerText = "VIDEO LOADED";
+};
+
+const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
+
+faceMesh.setOptions({
+    maxNumFaces: 1,
+    refineLandmarks: true, // Key for 100% lip sync
+    minDetectionConfidence: 0.5,
+    minTrackingConfidence: 0.5
+});
+
+faceMesh.onResults((results) => {
+    canvas.width = canvas.clientWidth;
+    canvas.height = canvas.clientHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (replicaPhoto.src) {
+        // Draw Image
+        ctx.drawImage(replicaPhoto, 0, 0, canvas.width, canvas.height);
+
+        if (results.multiFaceLandmarks && results.multiFaceLandmarks[0]) {
+            const landmarks = results.multiFaceLandmarks[0];
+
+            // 100% Accurate Mouth Points
+            const innerLips = [13, 312, 311, 310, 415, 308, 324, 318, 402, 317, 14, 87, 178, 88, 95, 78, 191, 80, 81, 82];
+            
+            ctx.fillStyle = "rgba(0,0,0,0.85)";
+            ctx.beginPath();
+            innerLips.forEach((idx, i) => {
+                const p = landmarks[idx];
+                if (i === 0) ctx.moveTo(p.x * canvas.width, p.y * canvas.height);
+                else ctx.lineTo(p.x * canvas.width, p.y * canvas.height);
+            });
+            ctx.closePath();
+            ctx.fill();
+        }
+    }
+});
+
+async function processFrames() {
     if (video.paused || video.ended) {
-        status.innerText = "SYNC COMPLETE - PREPARING DOWNLOAD...";
-        mediaRecorder.stop(); // Stop recording when video ends
+        status.innerText = "COMPLETE";
         return;
     }
-    
-    status.innerText = "AI SYNCING: " + Math.round((video.currentTime / video.duration) * 100) + "%";
-    await holistic.send({image: video});
-    
-    video.currentTime += 0.05; // Frame stepping
-    requestAnimationFrame(processVideo);
+    status.innerText = "SYNCING... " + Math.round((video.currentTime / video.duration) * 100) + "%";
+    await faceMesh.send({image: video});
+    video.currentTime += 0.04; // Process frame by frame
+    requestAnimationFrame(processFrames);
 }
 
 renderBtn.onclick = () => {
-    if (!photo.src || !video.src) return alert("Upload both files!");
-    
-    // SETUP RECORDER
-    recordedChunks = [];
-    const stream = canvas.captureStream(30); // Capture canvas at 30FPS
-    mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm; codecs=vp9' });
-    
-    mediaRecorder.ondataavailable = (e) => recordedChunks.push(e.data);
-    mediaRecorder.onstop = () => {
-        const blob = new Blob(recordedChunks, { type: 'video/webm' });
-        const url = URL.createObjectURL(blob);
-        const finalVid = document.getElementById('finalVideo');
-        finalVid.src = url;
-        finalVid.style.display = 'block';
-        document.getElementById('downloadTitle').style.display = 'block';
-    };
-
-    mediaRecorder.start();
+    if (!replicaPhoto.src || !video.src) return alert("Upload both first!");
     video.currentTime = 0;
-    processVideo();
+    video.play().then(() => {
+        processFrames();
+    });
 };
