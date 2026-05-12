@@ -1,9 +1,45 @@
+const videoElement = document.getElementById('input_video');
+const canvasElement = document.getElementById('output_canvas');
+const canvasCtx = canvasElement.getContext('2d');
+const imageUpload = document.getElementById('imageUpload');
 
-```css
-body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
-.controls { position: absolute; top: 10px; left: 10px; z-index: 10; display: flex; gap: 10px; }
-.video-container { width: 100vw; height: 100vh; display: flex; justify-content: center; }
-#output_canvas { height: 100%; transform: scaleX(-1); /* Mirror effect */ }
-input { padding: 8px; border-radius: 5px; border: none; }
+let replicaImg = new Image();
+imageUpload.onchange = (e) => {
+    const reader = new FileReader();
+    reader.onload = (f) => replicaImg.src = f.target.result;
+    reader.readAsDataURL(e.target.files[0]);
+};
 
-```
+function onResults(results) {
+    canvasCtx.save();
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+    if (!replicaImg.src) {
+        // If no image uploaded, show a placeholder
+        canvasCtx.fillStyle = "#333";
+        canvasCtx.fillText("Upload Photo to Start Replica", 50, 50);
+    } else {
+        // DRAW THE REPLICA
+        canvasCtx.drawImage(replicaImg, 0, 0, canvasElement.width, canvasElement.height);
+
+        // LIP SYNC MAGIC
+        if (results.faceLandmarks) {
+            const topLip = results.faceLandmarks[13];
+            const bottomLip = results.faceLandmarks[14];
+            const mouthOpen = Math.abs(topLip.y - bottomLip.y) * 1000;
+
+            // This "darkens" a mouth shape on the photo that opens/closes with you
+            canvasCtx.fillStyle = "black";
+            canvasCtx.beginPath();
+            canvasCtx.ellipse(
+                results.faceLandmarks[1].x * canvasElement.width, 
+                (results.faceLandmarks[1].y * canvasElement.height) + 20, 
+                20, mouthOpen, 0, 0, Math.PI * 2
+            );
+            canvasCtx.fill();
+        }
+    }
+    canvasCtx.restore();
+}
+
+// ... include the Holistic and Camera start code from previous steps ...
