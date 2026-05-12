@@ -1,25 +1,27 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>AI Replica Pro</title>
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/face_mesh.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 </head>
 <body>
-    <div class="overlay-ui">
+    <div class="header">
         <input type="file" id="imageUpload" accept="image/*">
-        <button id="startButton" style="background: #28a745; color: white;">CLICK TO START CAMERA</button>
+        <button id="startBtn">START AI CAM</button>
     </div>
 
-    <div class="split-screen">
-        <div class="view">
+    <div class="view-grid">
+        <div class="cam-box">
             <video id="input_video" playsinline></video>
-            <div class="label">DRIVER (ME)</div>
+            <div class="label">DRIVER (YOU)</div>
         </div>
-        <div class="view">
+        <div class="cam-box">
             <canvas id="output_canvas"></canvas>
-            <div class="label">AI REPLICA</div>
+            <div class="label">REPLICA (AI)</div>
         </div>
     </div>
 
