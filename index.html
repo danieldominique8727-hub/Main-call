@@ -1,27 +1,4 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>100% Accuracy AI Sync</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
-</head>
-<body>
-    <div class="header">
-        <div class="controls">
-            <label>Photo: <input type="file" id="imageInput" accept="image/*"></label>
-            <label>Video: <input type="file" id="videoInput" accept="video/*"></label>
-            <button id="renderBtn">START HIGH-SYNC RENDER</button>
-        </div>
-        <div id="status">READY: UPLOAD FILES</div>
-    </div>
-
-    <div class="display-container">
-        <video id="driverVideo" style="display:none;" playsinline></video>
-        <canvas id="outputCanvas"></canvas>
-    </div>
-
-    <script src="script.js"></script>
-</body>
-</html>
+<div id="downloadArea" style="margin-top: 20px;">
+    <h3 id="downloadTitle" style="display:none; color: #00ff00;">DOWNLOAD YOUR AI VIDEO BELOW:</h3>
+    <video id="finalVideo" controls style="width: 100%; max-width: 400px; display:none; border: 2px solid #00ff00;"></video>
+</div>
