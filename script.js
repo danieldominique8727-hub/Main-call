@@ -1,55 +1,57 @@
 const video = document.getElementById('input_video');
 const canvas = document.getElementById('output_canvas');
 const ctx = canvas.getContext('2d');
-const startBtn = document.getElementById('startBtn');
+const imageInput = document.getElementById('imageUpload');
+const videoInput = document.getElementById('videoUpload');
+const processBtn = document.getElementById('processBtn');
 
-let userImg = new Image();
-document.getElementById('imageUpload').onchange = (e) => {
+let replicaImg = new Image();
+
+// Handle Image Upload
+imageInput.onchange = (e) => {
     const reader = new FileReader();
-    reader.onload = (f) => userImg.src = f.target.result;
+    reader.onload = (f) => replicaImg.src = f.target.result;
     reader.readAsDataURL(e.target.files[0]);
+};
+
+// Handle Video Upload
+videoInput.onchange = (e) => {
+    const file = e.target.files[0];
+    video.src = URL.createObjectURL(file);
 };
 
 function onResults(results) {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
-    
     ctx.save();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    if (userImg.src) {
-        let tx = 0;
-        let ty = 0;
+    if (replicaImg.src) {
         let rotation = 0;
+        let tiltY = 0;
 
-        // BODY MOVEMENT (Shoulders/Pose)
+        // TRACK BODY LEANING
         if (results.poseLandmarks) {
-            const leftShoulder = results.poseLandmarks[11];
-            const rightShoulder = results.poseLandmarks[12];
-            
-            // Calculate tilt based on shoulder height
-            rotation = Math.atan2(rightShoulder.y - leftShoulder.y, rightShoulder.x - leftShoulder.x);
-            // Move photo left/right based on body position
-            tx = (leftShoulder.x + rightShoulder.x) / 2 - 0.5;
+            const leftS = results.poseLandmarks[11];
+            const rightS = results.poseLandmarks[12];
+            rotation = Math.atan2(rightS.y - leftS.y, rightS.x - leftS.x);
         }
 
-        // Apply Global Movement to the whole image
-        ctx.translate(canvas.width / 2, canvas.height / 2);
+        // DRAW REPLICA WITH BODY TILT
+        ctx.translate(canvas.width/2, canvas.height/2);
         ctx.rotate(rotation);
-        ctx.translate(-canvas.width / 2 - (tx * canvas.width), -canvas.height / 2);
+        ctx.drawImage(replicaImg, -canvas.width/2, -canvas.height/2, canvas.width, canvas.height);
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset for mouth
 
-        // Draw the body/image
-        ctx.drawImage(userImg, 0, 0, canvas.width, canvas.height);
-
-        // FACE MIMIC (Inside the body transform)
+        // TRACK FACE/LIP SYNC
         if (results.faceLandmarks) {
-            const topLip = results.faceLandmarks[13];
-            const botLip = results.faceLandmarks[14];
-            const mouthOpen = Math.abs(topLip.y - botLip.y) * canvas.height * 3;
+            const top = results.faceLandmarks[13];
+            const bot = results.faceLandmarks[14];
+            const gap = Math.abs(top.y - bot.y) * canvas.height * 3;
 
             ctx.fillStyle = "rgba(0,0,0,0.7)";
             ctx.beginPath();
-            ctx.ellipse(canvas.width/2, canvas.height * 0.65, 40, mouthOpen, 0, 0, Math.PI * 2);
+            ctx.ellipse(canvas.width/2, canvas.height * 0.65, 40, gap, rotation, 0, Math.PI*2);
             ctx.fill();
         }
     }
@@ -57,14 +59,15 @@ function onResults(results) {
 }
 
 const holistic = new Holistic({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`});
-holistic.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5 });
 holistic.onResults(onResults);
 
-startBtn.onclick = () => {
-    const camera = new Camera(video, {
-        onFrame: async () => { await holistic.send({image: video}); },
-        width: 1280, height: 720
-    });
-    camera.start();
-    startBtn.style.display = 'none';
+processBtn.onclick = () => {
+    video.play();
+    async function update() {
+        if (!video.paused && !video.ended) {
+            await holistic.send({image: video});
+            requestAnimationFrame(update);
+        }
+    }
+    update();
 };
