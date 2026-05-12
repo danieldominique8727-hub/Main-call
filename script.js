@@ -10,7 +10,6 @@ document.getElementById('imageUpload').onchange = (e) => {
     reader.readAsDataURL(e.target.files[0]);
 };
 
-// This is the main engine that mimics your movement
 function onResults(results) {
     canvas.width = canvas.clientWidth;
     canvas.height = canvas.clientHeight;
@@ -19,54 +18,51 @@ function onResults(results) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     if (userImg.src) {
-        // 1. Draw the Base Photo
+        let tx = 0;
+        let ty = 0;
+        let rotation = 0;
+
+        // BODY MOVEMENT (Shoulders/Pose)
+        if (results.poseLandmarks) {
+            const leftShoulder = results.poseLandmarks[11];
+            const rightShoulder = results.poseLandmarks[12];
+            
+            // Calculate tilt based on shoulder height
+            rotation = Math.atan2(rightShoulder.y - leftShoulder.y, rightShoulder.x - leftShoulder.x);
+            // Move photo left/right based on body position
+            tx = (leftShoulder.x + rightShoulder.x) / 2 - 0.5;
+        }
+
+        // Apply Global Movement to the whole image
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate(rotation);
+        ctx.translate(-canvas.width / 2 - (tx * canvas.width), -canvas.height / 2);
+
+        // Draw the body/image
         ctx.drawImage(userImg, 0, 0, canvas.width, canvas.height);
 
-        if (results.multiFaceLandmarks && results.multiFaceLandmarks[0]) {
-            const landmarks = results.multiFaceLandmarks[0];
+        // FACE MIMIC (Inside the body transform)
+        if (results.faceLandmarks) {
+            const topLip = results.faceLandmarks[13];
+            const botLip = results.faceLandmarks[14];
+            const mouthOpen = Math.abs(topLip.y - botLip.y) * canvas.height * 3;
 
-            // 2. Track Mouth Opening (Points 13 & 14)
-            const topLip = landmarks[13];
-            const botLip = landmarks[14];
-            const mouthOpen = Math.abs(topLip.y - botLip.y) * canvas.height * 2.8;
-
-            // 3. Track Head Tilt (Using Eye Points)
-            const leftEye = landmarks[33];
-            const rightEye = landmarks[263];
-            const tiltAngle = Math.atan2(rightEye.y - leftEye.y, rightEye.x - leftEye.x);
-
-            // 4. ANIMATION OVERLAY
-            // This creates a 'talking' shadow on the replica
-            ctx.translate(canvas.width / 2, canvas.height * 0.65); // Move to mouth area
-            ctx.rotate(tiltAngle); // Tilt with your head
-            
-            // Draw the mimic mouth
             ctx.fillStyle = "rgba(0,0,0,0.7)";
             ctx.beginPath();
-            ctx.ellipse(0, 0, 35, mouthOpen, 0, 0, Math.PI * 2);
+            ctx.ellipse(canvas.width/2, canvas.height * 0.65, 40, mouthOpen, 0, 0, Math.PI * 2);
             ctx.fill();
-
-            // 5. BLINKING (Tracks eye distance)
-            const eyeGap = Math.abs(landmarks[159].y - landmarks[145].y) * 1000;
-            if (eyeGap < 6) {
-                // If you blink, we dim the replica's eyes
-                ctx.fillStyle = "rgba(0,0,0,0.3)";
-                ctx.fillRect(-canvas.width/2, -canvas.height*0.3, canvas.width, 50);
-            }
         }
     }
     ctx.restore();
 }
 
-// Initialize the AI Mesh
-const faceMesh = new FaceMesh({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/face_mesh/${file}`});
-faceMesh.setOptions({ maxNumFaces: 1, refineLandmarks: true, minDetectionConfidence: 0.5, minTrackingConfidence: 0.5 });
-faceMesh.onResults(onResults);
+const holistic = new Holistic({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`});
+holistic.setOptions({ modelComplexity: 1, smoothLandmarks: true, minDetectionConfidence: 0.5 });
+holistic.onResults(onResults);
 
-// Start the Camera
 startBtn.onclick = () => {
     const camera = new Camera(video, {
-        onFrame: async () => { await faceMesh.send({image: video}); },
+        onFrame: async () => { await holistic.send({image: video}); },
         width: 1280, height: 720
     });
     camera.start();
