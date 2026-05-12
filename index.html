@@ -1,25 +1,25 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AI Replica Cam</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
 </head>
 <body>
-    <div class="header-ui">
+    <div class="overlay-ui">
         <input type="file" id="imageUpload" accept="image/*">
-        <button onclick="location.reload()">Reset Cam</button>
+        <button id="startButton" style="background: #28a745; color: white;">CLICK TO START CAMERA</button>
     </div>
 
-    <div class="main-container">
-        <div class="cam-box">
-            <span>DRIVER (REAL ME)</span>
-            <video id="input_video"></video>
+    <div class="split-screen">
+        <div class="view">
+            <video id="input_video" playsinline></video>
+            <div class="label">DRIVER (ME)</div>
         </div>
-
-        <div class="cam-box">
-            <span>AI REPLICA (LIP SYNC)</span>
+        <div class="view">
             <canvas id="output_canvas"></canvas>
+            <div class="label">AI REPLICA</div>
         </div>
     </div>
 
