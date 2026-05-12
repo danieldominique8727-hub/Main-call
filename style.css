@@ -1,0 +1,9 @@
+
+```css
+body { margin: 0; background: #000; overflow: hidden; font-family: sans-serif; }
+.controls { position: absolute; top: 10px; left: 10px; z-index: 10; display: flex; gap: 10px; }
+.video-container { width: 100vw; height: 100vh; display: flex; justify-content: center; }
+#output_canvas { height: 100%; transform: scaleX(-1); /* Mirror effect */ }
+input { padding: 8px; border-radius: 5px; border: none; }
+
+```
