@@ -1,27 +1,47 @@
-body { margin: 0; background: #111; color: white; font-family: Arial; }
-.header-ui { padding: 10px; background: #222; display: flex; gap: 20px; justify-content: center; }
+const videoElement = document.getElementById('input_video');
+const canvasElement = document.getElementById('output_canvas');
+const canvasCtx = canvasElement.getContext('2d');
+const startButton = document.getElementById('startButton');
 
-.main-container { 
-    display: flex; 
-    width: 100vw; 
-    height: calc(100vh - 60px); 
-    gap: 5px;
+let userImg = new Image();
+document.getElementById('imageUpload').onchange = (e) => {
+    const reader = new FileReader();
+    reader.onload = (f) => userImg.src = f.target.result;
+    reader.readAsDataURL(e.target.files[0]);
+};
+
+function onResults(results) {
+    canvasElement.width = canvasElement.clientWidth;
+    canvasElement.height = canvasElement.clientHeight;
+    canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+
+    if (userImg.src) {
+        // Draw the Base Photo
+        canvasCtx.drawImage(userImg, 0, 0, canvasElement.width, canvasElement.height);
+
+        if (results.faceLandmarks) {
+            // REPLICA MIMIC LOGIC
+            const topLip = results.faceLandmarks[13];
+            const botLip = results.faceLandmarks[14];
+            const openAmt = Math.abs(topLip.y - botLip.y) * 1000;
+
+            // Simple "Puppet" Mouth: Cuts a piece of the image and moves it
+            canvasCtx.fillStyle = "black";
+            canvasCtx.beginPath();
+            canvasCtx.ellipse(canvasElement.width/2, canvasElement.height * 0.7, 30, openAmt, 0, 0, Math.PI*2);
+            canvasCtx.fill();
+        }
+    }
 }
 
-.cam-box { 
-    flex: 1; 
-    position: relative; 
-    background: #000; 
-    border: 1px solid #333;
-    display: flex;
-    flex-direction: column;
-}
+const holistic = new Holistic({locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/holistic/${file}`});
+holistic.onResults(onResults);
 
-.cam-box span { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 5px; font-size: 12px; }
-
-video, canvas { 
-    width: 100%; 
-    height: 100%; 
-    object-fit: cover; 
-    transform: scaleX(-1); /* Mirrors the feed like a real call */
-}
+startButton.onclick = () => {
+    const camera = new Camera(videoElement, {
+        onFrame: async () => { await holistic.send({image: videoElement}); },
+        width: 640, height: 480
+    });
+    camera.start();
+    startButton.style.display = 'none'; // Hide button after start
+};
