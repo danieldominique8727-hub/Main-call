@@ -3,27 +3,23 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>AI Video Mimic</title>
+    <title>100% Accuracy AI Sync</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/holistic/holistic.js"></script>
 </head>
 <body>
     <div class="header">
-        <label>1. Upload Replica Image: <input type="file" id="imageUpload" accept="image/*"></label>
-        <br>
-        <label>2. Upload Driver Video: <input type="file" id="videoUpload" accept="video/*"></label>
-        <button id="processBtn">START MIMIC</button>
+        <div class="controls">
+            <label>Photo: <input type="file" id="imageInput" accept="image/*"></label>
+            <label>Video: <input type="file" id="videoInput" accept="video/*"></label>
+            <button id="renderBtn">START HIGH-SYNC RENDER</button>
+        </div>
+        <div id="status">READY: UPLOAD FILES</div>
     </div>
 
-    <div class="app-view">
-        <div class="box">
-            <video id="input_video" controls loop muted playsinline></video>
-            <div class="label">DRIVER VIDEO</div>
-        </div>
-        <div class="box">
-            <canvas id="output_canvas"></canvas>
-            <div class="label">AI GENERATED MIMIC</div>
-        </div>
+    <div class="display-container">
+        <video id="driverVideo" style="display:none;" playsinline></video>
+        <canvas id="outputCanvas"></canvas>
     </div>
 
     <script src="script.js"></script>
