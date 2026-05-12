@@ -1,32 +1,27 @@
-// This version uses a simpler camera call that Safari prefers
-const video = document.getElementById('input_video');
-const canvas = document.getElementById('output_canvas');
-const ctx = canvas.getContext('2d');
+body { margin: 0; background: #111; color: white; font-family: Arial; }
+.header-ui { padding: 10px; background: #222; display: flex; gap: 20px; justify-content: center; }
 
-async function startCamera() {
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-        video.play();
-        draw();
-    } catch (err) {
-        alert("Camera blocked! Go to AA menu > Website Settings > Allow Camera");
-    }
+.main-container { 
+    display: flex; 
+    width: 100vw; 
+    height: calc(100vh - 60px); 
+    gap: 5px;
 }
 
-function draw() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-    
-    // Draw the webcam feed
-    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    
-    // Logic for the 'Words' to follow movement
-    ctx.fillStyle = "yellow";
-    ctx.font = "bold 24px Arial";
-    ctx.fillText("AI TRACKING ACTIVE", 50, 50);
-
-    requestAnimationFrame(draw);
+.cam-box { 
+    flex: 1; 
+    position: relative; 
+    background: #000; 
+    border: 1px solid #333;
+    display: flex;
+    flex-direction: column;
 }
 
-startCamera();
+.cam-box span { position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.5); padding: 5px; font-size: 12px; }
+
+video, canvas { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    transform: scaleX(-1); /* Mirrors the feed like a real call */
+}
